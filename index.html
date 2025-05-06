@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aşk Sitesi</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: pink;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-image: url('images/heart.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      animation: float 8s linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh);
+        opacity: 0;
+      }
+    }
+
+    .big-heart {
+      width: 100px;
+      height: 100px;
+      background-image: url('images/big-heart.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .girl {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background-image: url('images/girl.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      z-index: 2;
+      animation: moveAround 12s infinite alternate ease-in-out;
+    }
+
+    @keyframes moveAround {
+      0%   { top: 10vh; left: 10vw; }
+      25%  { top: 30vh; left: 70vw; }
+      50%  { top: 50vh; left: 30vw; }
+      75%  { top: 70vh; left: 60vw; }
+      100% { top: 40vh; left: 40vw; }
+    }
+
+    #poemContent {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+      background-color: pink;
+    }
+
+    #poemImage {
+      max-width: 90%;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    #poemText {
+      font-size: 20px;
+      font-weight: bold;
+      color: darkred;
+      white-space: pre-line;
+    }
+
+    .nav-buttons {
+      margin-top: 20px;
+    }
+
+    .nav-buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 0 5px;
+      background-color: #ff69b4;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    input[type=range] {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 20;
+    }
+
+    #loveMessage {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: red;
+      color: white;
+      padding: 15px 30px;
+      font-size: 24px;
+      border-radius: 20px;
+      z-index: 999;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loveMessage">Seni çok seviyorum Alev ❤️</div>
+
+  <div class="big-heart" onclick="enterSite()"></div>
+
+  <div id="poemContent">
+    <img id="poemImage" src="images/poem1.jpg" alt="Şiir Görseli">
+    <div id="poemText"></div>
+    <div class="nav-buttons">
+      <button onclick="prevPoem()">Önceki</button>
+      <button id="nextButton" onclick="nextPoem()">Sonraki</button>
+      <button id="lastButton" onclick="showLoveMessage()" style="display:none">Son</button>
+    </div>
+  </div>
+
+  <audio id="bgMusic" autoplay loop>
+    <source src="audio/music.mp3" type="audio/mpeg">
+    Tarayıcınız ses etiketini desteklemiyor.
+  </audio>
+
+  <input type="range" min="0" max="1" step="0.01" value="0.5" onchange="document.getElementById('bgMusic').volume = this.value" />
+
+  <script>
+    const numberOfHearts = 60;
+    const numberOfGirls = 5;
+    const poems = [
+      {
+        img: 'images/poem1.jpg',
+        text: 'Gözlerin değince yüreğime usulca,\nKaranlık gecemde doğdun birden, Alev.\nAdını her hecede sevda taşır dudağım,\nİçimde sönmeyen tek yangınsın sen, Alev.'
+      },
+      {
+        img: 'images/poem2.jpg',
+        text: 'Alev adınla başlar her dua gecemde,\nAy bile kıskanır seni izlediğimde.\nTenine değmeyen rüzgarı bile kıskanırım,\nAşkınla tutuşur her hece içimde.'
+      },
+      {
+        img: 'images/poem3.jpg',
+        text: 'Bir gülüşün yeter Alev, bahar olsun içimde,\nKaranlığa meydan okur ışığın her kelimede.\nGözlerinle başlar masallarım her gece,\nYüreğimde saklısın sonsuz hece hece.'
+      },
+      {
+        img: 'images/poem4.jpg',
+        text: 'Alevsin adın gibi, içimde yanarsın,\nHer dokunuşunla bir başka bahar başlarsın.\nGeceleri uyandıran tek düşümsün,\nSensizliğin bile sen kokar, anlarsın.'
+      },
+      {
+        img: 'images/poem5.jpg',
+        text: 'Alev gibi düştün kalbime usulca,\nSensizlik bile senle dolu artık, baştan başa.\nNe zaman gözlerini görsem, zaman donar,\nKalbim seni her an bir masal gibi anar.'
+      }
+    ];
+
+    let currentPoem = 0;
+
+    function createHearts() {
+      for (let i = 0; i < numberOfHearts; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (6 + Math.random() * 5) + 's';
+        document.body.appendChild(heart);
+      }
+    }
+
+    function createGirls() {
+      for (let i = 0; i < numberOfGirls; i++) {
+        const girl = document.createElement('div');
+        girl.className = 'girl';
+        girl.style.top = Math.random() * 80 + 'vh';
+        girl.style.left = Math.random() * 90 + 'vw';
+        document.body.appendChild(girl);
+      }
+    }
+
+    function enterSite() {
+      document.querySelector('.big-heart').remove();
+      document.getElementById('poemContent').style.display = 'flex';
+      showPoem(currentPoem);
+      createGirls();
+
+      const music = document.getElementById('bgMusic');
+      music.volume = 0.5;
+      music.play().catch(() => {
+        music.muted = true;
+        music.play();
+      });
+    }
+
+    function showPoem(index) {
+      const poem = poems[index];
+      document.getElementById('poemImage').src = poem.img;
+      document.getElementById('poemText').innerText = poem.text;
+
+      document.getElementById('nextButton').style.display = (index === poems.length - 1) ? 'none' : 'inline-block';
+      document.getElementById('lastButton').style.display = (index === poems.length - 1) ? 'inline-block' : 'none';
+    }
+
+    function nextPoem() {
+      if (currentPoem < poems.length - 1) {
+        currentPoem++;
+        showPoem(currentPoem);
+      }
+    }
+
+    function prevPoem() {
+      if (currentPoem > 0) {
+        currentPoem--;
+        showPoem(currentPoem);
+      }
+    }
+
+    function showLoveMessage() {
+      const msg = document.getElementById('loveMessage');
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 5000);
+    }
+
+    createHearts();
+  </script>
+</body>
+</html>
